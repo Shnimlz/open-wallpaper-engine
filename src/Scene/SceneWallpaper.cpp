@@ -225,11 +225,11 @@ void RenderHandler::on(RenderDraw&&) {
             fi.screen_h  = fi.canvas_h;
             owe::script::TickSceneScripts(*m_scene, fi);
         }
-        m_scene->paritileSys->Emitt();
+        m_scene->particleSys->Emit();
 
         m_render->drawFrame(*m_scene);
 
-        m_scene->PassFrameTime(frame_timer.IdeaTime() * m_speed);
+        m_scene->PassFrameTime(frame_timer.IdealTime() * m_speed);
 
         m_scene->shaderValueUpdater->FrameEnd();
 

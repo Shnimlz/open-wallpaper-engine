@@ -42,7 +42,7 @@ ParticleSubSystem::ParticleSubSystem(ParticleSystem& p, std::shared_ptr<SceneMes
 
 ParticleSubSystem::~ParticleSubSystem() = default;
 
-void ParticleSubSystem::AddEmitter(ParticleEmittOp&& em) { m_emiters.emplace_back(em); }
+void ParticleSubSystem::AddEmitter(ParticleEmitOp&& em) { m_emitters.emplace_back(em); }
 
 void ParticleSubSystem::AddInitializer(ParticleInitOp&& ini) { m_initializers.emplace_back(ini); }
 
@@ -77,7 +77,7 @@ ParticleInstance* ParticleSubSystem::QueryNewInstance() {
     return nullptr;
 }
 
-void ParticleSubSystem::Emitt() {
+void ParticleSubSystem::Emit() {
     double frameTime    = m_sys.scene.frameTime;
     double particleTime = frameTime * m_rate;
     m_time += particleTime;
@@ -133,7 +133,7 @@ void ParticleSubSystem::Emitt() {
         }
 
         if (! inst->IsDeath()) {
-            for (auto& emittOp : m_emiters) {
+            for (auto& emittOp : m_emitters) {
                 emittOp(inst->ParticlesVec(), m_initializers, m_maxcount, particleTime);
             }
         }
@@ -191,12 +191,12 @@ void ParticleSubSystem::Emitt() {
     m_sys.gener->GenGLData(m_instances, *m_mesh, m_genSpecOp);
 
     for (auto& child : m_children) {
-        child->Emitt();
+        child->Emit();
     }
 }
 
-void ParticleSystem::Emitt() {
+void ParticleSystem::Emit() {
     for (auto& el : subsystems) {
-        el->Emitt();
+        el->Emit();
     }
 }

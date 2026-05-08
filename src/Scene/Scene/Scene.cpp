@@ -16,7 +16,7 @@ void delete_vfs(void* p) noexcept { delete static_cast<fs::VFS*>(p); }
 Scene::Scene()
     : sceneGraph(std::make_shared<SceneNode>()),
       vfs(nullptr, &delete_vfs),
-      paritileSys(std::make_unique<ParticleSystem>(*this)) {}
+      particleSys(std::make_unique<ParticleSystem>(*this)) {}
 Scene::~Scene() = default;
 
 } // namespace owe

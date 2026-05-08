@@ -611,34 +611,34 @@ WPParticleParser::genParticleOperatorOp(const nlohmann::json&                   
     };
 }
 
-ParticleEmittOp WPParticleParser::genParticleEmittOp(const wpscene::Emitter& wpe, bool sort) {
+ParticleEmitOp WPParticleParser::genParticleEmittOp(const wpscene::Emitter& wpe, bool sort) {
     if (wpe.name == "boxrandom") {
         ParticleBoxEmitterArgs box;
         box.emitSpeed     = wpe.rate;
         box.minDistance   = wpe.distancemin;
         box.maxDistance   = wpe.distancemax;
         box.directions    = wpe.directions;
-        box.orgin         = wpe.origin;
+        box.origin         = wpe.origin;
         box.one_per_frame = wpe.flags[wpscene::Emitter::FlagEnum::one_per_frame];
         box.instantaneous = wpe.instantaneous;
         box.minSpeed      = wpe.speedmin;
         box.maxSpeed      = wpe.speedmax;
         box.sort          = sort;
-        return ParticleBoxEmitterArgs::MakeEmittOp(box);
+        return ParticleBoxEmitterArgs::MakeEmitOp(box);
     } else if (wpe.name == "sphererandom") {
         ParticleSphereEmitterArgs sphere;
         sphere.emitSpeed     = wpe.rate;
         sphere.minDistance   = wpe.distancemin[0];
         sphere.maxDistance   = wpe.distancemax[0];
         sphere.directions    = wpe.directions;
-        sphere.orgin         = wpe.origin;
+        sphere.origin         = wpe.origin;
         sphere.sign          = wpe.sign;
         sphere.one_per_frame = wpe.flags[wpscene::Emitter::FlagEnum::one_per_frame];
         sphere.instantaneous = wpe.instantaneous;
         sphere.minSpeed      = wpe.speedmin;
         sphere.maxSpeed      = wpe.speedmax;
         sphere.sort          = sort;
-        return ParticleSphereEmitterArgs::MakeEmittOp(sphere);
+        return ParticleSphereEmitterArgs::MakeEmitOp(sphere);
     } else
         return [](std::vector<Particle>&, std::vector<ParticleInitOp>&, uint32_t, float) {
         };

@@ -365,7 +365,7 @@ public:
     SceneNode&  FinalNode() const { return *m_final_node; }
     void        SetFinalBlend(BlendMode m) { m_final_blend = m; }
 
-    void ResolveEffect(const SceneMesh& defualt_mesh, std::string_view effect_cam);
+    void ResolveEffect(const SceneMesh& default_mesh, std::string_view effect_cam);
 
 private:
     SceneNode*  m_worldNode;
@@ -401,7 +401,7 @@ public:
 
     void Update();
 
-    void AttatchNode(std::shared_ptr<SceneNode>);
+    void AttachNode(std::shared_ptr<SceneNode>);
 
     bool   IsPerspective() const { return m_perspective; }
     double Aspect() const { return m_aspect; }
@@ -422,7 +422,7 @@ public:
     void SetAspect(double aspect) { m_aspect = aspect; }
     void SetFov(double value) { m_fov = value; }
 
-    void  AttatchImgEffect(std::shared_ptr<SceneImageEffectLayer> eff) { m_imgEffect = eff; }
+    void  AttachImgEffect(std::shared_ptr<SceneImageEffectLayer> eff) { m_imgEffect = eff; }
     bool  HasImgEffect() const { return (bool)m_imgEffect; }
     auto& GetImgEffect() { return m_imgEffect; }
 
@@ -612,7 +612,7 @@ struct ParticleInfo {
 using ParticleInitOp = std::function<void(Particle&, double)>;
 using ParticleOperatorOp = std::function<void(const ParticleInfo&)>;
 
-using ParticleEmittOp = std::function<void(std::vector<Particle>&, std::vector<ParticleInitOp>&,
+using ParticleEmitOp = std::function<void(std::vector<Particle>&, std::vector<ParticleInitOp>&,
                                            uint32_t maxcount, double timepass)>;
 
 struct ParticleBoxEmitterArgs {
@@ -620,14 +620,14 @@ struct ParticleBoxEmitterArgs {
     std::array<float, 3> minDistance;
     std::array<float, 3> maxDistance;
     float                emitSpeed;
-    std::array<float, 3> orgin;
+    std::array<float, 3> origin;
     bool                 one_per_frame;
     bool                 sort;
     u32                  instantaneous;
     float                minSpeed;
     float                maxSpeed;
 
-    static ParticleEmittOp MakeEmittOp(ParticleBoxEmitterArgs);
+    static ParticleEmitOp MakeEmitOp(ParticleBoxEmitterArgs);
 };
 
 struct ParticleSphereEmitterArgs {
@@ -635,7 +635,7 @@ struct ParticleSphereEmitterArgs {
     float                  minDistance;
     float                  maxDistance;
     float                  emitSpeed;
-    std::array<float, 3>   orgin;
+    std::array<float, 3>   origin;
     std::array<int32_t, 3> sign;
     bool                   one_per_frame;
     bool                   sort;
@@ -643,7 +643,7 @@ struct ParticleSphereEmitterArgs {
     float                  minSpeed;
     float                  maxSpeed;
 
-    static ParticleEmittOp MakeEmittOp(ParticleSphereEmitterArgs);
+    static ParticleEmitOp MakeEmitOp(ParticleSphereEmitterArgs);
 };
 
 // IParticleRawGener uses ParticleRawGenSpecOp; declare the spec types early.
@@ -890,11 +890,11 @@ public:
                       ParticleRawGenSpecOp specOp);
     ~ParticleSubSystem();
 
-    void Emitt();
+    void Emit();
 
     ParticleInstance* QueryNewInstance();
 
-    void AddEmitter(ParticleEmittOp&&);
+    void AddEmitter(ParticleEmitOp&&);
     void AddInitializer(ParticleInitOp&&);
     void AddOperator(ParticleOperatorOp&&);
 
@@ -909,7 +909,7 @@ public:
 private:
     ParticleSystem&            m_sys;
     std::shared_ptr<SceneMesh> m_mesh;
-    std::vector<ParticleEmittOp> m_emiters;
+    std::vector<ParticleEmitOp> m_emitters;
 
     std::vector<ParticleInitOp>     m_initializers;
     std::vector<ParticleOperatorOp> m_operators;
@@ -948,7 +948,7 @@ public:
     ParticleSystem(Scene& scene): scene(scene) {};
     ~ParticleSystem() = default;
 
-    void Emitt();
+    void Emit();
 
     Scene& scene;
 
@@ -1046,7 +1046,7 @@ public:
 
     SceneMesh default_effect_mesh;
 
-    std::unique_ptr<ParticleSystem> paritileSys;
+    std::unique_ptr<ParticleSystem> particleSys;
 
     SceneCamera* activeCamera;
 

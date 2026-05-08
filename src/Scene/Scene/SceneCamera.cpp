@@ -55,7 +55,7 @@ void SceneCamera::CalculateViewProjectionMatrix() {
 
 void SceneCamera::Update() { CalculateViewProjectionMatrix(); }
 
-void SceneCamera::AttatchNode(std::shared_ptr<SceneNode> node) {
+void SceneCamera::AttachNode(std::shared_ptr<SceneNode> node) {
     if (! node) {
         rstd_error("Attach a null node to camera");
         return;

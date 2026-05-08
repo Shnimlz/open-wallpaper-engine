@@ -508,7 +508,7 @@ void ParseCamera(ParseContext& context, wpscene::WPSceneGeneral& general) {
     // effect camera
     scene.cameras["effect"]    = std::make_shared<SceneCamera>(2, 2, -1.0f, 1.0f);
     context.effect_camera_node = std::make_shared<SceneNode>(); // at 0,0,0
-    scene.cameras.at("effect")->AttatchNode(context.effect_camera_node);
+    scene.cameras.at("effect")->AttachNode(context.effect_camera_node);
     scene.sceneGraph->AppendChild(context.effect_camera_node);
 
     // global camera
@@ -521,7 +521,7 @@ void ParseCamera(ParseContext& context, wpscene::WPSceneGeneral& general) {
         cscale { 1.0f, 1.0f, 1.0f }, cangle(Vector3f::Zero());
 
     context.global_camera_node = std::make_shared<SceneNode>(cori, cscale, cangle);
-    scene.activeCamera->AttatchNode(context.global_camera_node);
+    scene.activeCamera->AttachNode(context.global_camera_node);
     scene.sceneGraph->AppendChild(context.global_camera_node);
 
     scene.cameras["global_perspective"] =
@@ -533,7 +533,7 @@ void ParseCamera(ParseContext& context, wpscene::WPSceneGeneral& general) {
     Vector3f cperori                       = cori;
     cperori[2]                             = 1000.0f;
     context.global_perspective_camera_node = std::make_shared<SceneNode>(cperori, cscale, cangle);
-    scene.cameras["global_perspective"]->AttatchNode(context.global_perspective_camera_node);
+    scene.cameras["global_perspective"]->AttachNode(context.global_perspective_camera_node);
     scene.sceneGraph->AppendChild(context.global_perspective_camera_node);
 }
 
@@ -542,7 +542,7 @@ void InitContext(ParseContext& context, fs::VFS& vfs, wpscene::WPScene& sc) {
     context.vfs              = &vfs;
     auto& scene              = *context.scene;
     scene.imageParser        = std::make_unique<WPTexImageParser>(&vfs);
-    scene.paritileSys->gener = std::make_unique<WPParticleRawGener>();
+    scene.particleSys->gener = std::make_unique<WPParticleRawGener>();
     scene.shaderValueUpdater = std::make_unique<WPShaderValueUpdater>(&scene);
     GenCardMesh(scene.default_effect_mesh, { 2, 2 });
     context.shader_updater = static_cast<WPShaderValueUpdater*>(scene.shaderValueUpdater.get());
@@ -752,7 +752,7 @@ void ParseImageObj(ParseContext& context, wpscene::WPImageObject& img_obj) {
                                               (int32_t)scene.activeCamera->Height(),
                                               -1.0f,
                                               1.0f);
-            scene.cameras.at(nodeAddr)->AttatchNode(scene.activeCamera->GetAttachedNode());
+            scene.cameras.at(nodeAddr)->AttachNode(scene.activeCamera->GetAttachedNode());
             if (scene.linkedCameras.count("global") == 0) scene.linkedCameras["global"] = {};
             scene.linkedCameras.at("global").push_back(nodeAddr);
         } else {
@@ -760,7 +760,7 @@ void ParseImageObj(ParseContext& context, wpscene::WPImageObject& img_obj) {
             i32 w                   = (i32)wpimgobj.size[0];
             i32 h                   = (i32)wpimgobj.size[1];
             scene.cameras[nodeAddr] = std::make_shared<SceneCamera>(w, h, -1.0f, 1.0f);
-            scene.cameras.at(nodeAddr)->AttatchNode(context.effect_camera_node);
+            scene.cameras.at(nodeAddr)->AttachNode(context.effect_camera_node);
         }
         spImgNode->SetCamera(nodeAddr);
         std::string effect_ppong_a, effect_ppong_b;
@@ -777,7 +777,7 @@ void ParseImageObj(ParseContext& context, wpscene::WPImageObject& img_obj) {
             } else {
                 spImgNode->CopyTrans(SceneNode());
             }
-            scene.cameras.at(nodeAddr)->AttatchImgEffect(imgEffectLayer);
+            scene.cameras.at(nodeAddr)->AttachImgEffect(imgEffectLayer);
         }
         // set renderTarget for ping-pong operate
         {
@@ -1072,7 +1072,7 @@ void ParseParticleObj(ParseContext& context, wpscene::WPParticleObject& wppartob
     }
 
     auto particleSub = std::make_unique<ParticleSubSystem>(
-        *context.scene->paritileSys,
+        *context.scene->particleSys,
         spMesh,
         maxcount,
         override.rate,
@@ -1116,7 +1116,7 @@ void ParseParticleObj(ParseContext& context, wpscene::WPParticleObject& wppartob
     if (is_child)
         child_ptr.particle_parent->AddChild(std::move(particleSub));
     else
-        context.scene->paritileSys->subsystems.emplace_back(std::move(particleSub));
+        context.scene->particleSys->subsystems.emplace_back(std::move(particleSub));
 
     WireFieldScripts(context, spNode.get(), wppartobj.field_bindings);
     if (is_child)
