@@ -1230,14 +1230,22 @@ void ParseTextObj(ParseContext& context, wpscene::WPTextObject& obj) {
 
     text::FontCache::ResolvedBlob resolved;
     if (! font_name.empty()) {
-        std::string vfs_path =
-            "/assets/fonts/" + std::filesystem::path(font_name).filename().string();
-        std::string blob_str = fs::GetFileContent(*context.vfs, vfs_path);
-        if (! blob_str.empty()) {
-            auto bytes = std::make_shared<std::vector<std::byte>>(blob_str.size());
-            std::memcpy(bytes->data(), blob_str.data(), blob_str.size());
-            resolved.bytes  = std::move(bytes);
-            resolved.source = vfs_path;
+        std::string filename = std::filesystem::path(font_name).filename().string();
+        std::vector<std::string> vfs_paths = {
+            "/assets/fonts/" + filename,
+            "/assets/" + filename,
+            "/" + filename
+        };
+
+        for (const auto& vfs_path : vfs_paths) {
+            std::string blob_str = fs::GetFileContent(*context.vfs, vfs_path);
+            if (! blob_str.empty()) {
+                auto bytes = std::make_shared<std::vector<std::byte>>(blob_str.size());
+                std::memcpy(bytes->data(), blob_str.data(), blob_str.size());
+                resolved.bytes  = std::move(bytes);
+                resolved.source = vfs_path;
+                break;
+            }
         }
     }
     if (! resolved.bytes) {

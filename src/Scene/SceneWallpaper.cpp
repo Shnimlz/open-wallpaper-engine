@@ -217,6 +217,15 @@ void RenderHandler::on(RenderDraw&&) {
         // what FrameBegin set up; UpdateUniforms runs inside drawFrame.
         // The runtime is a no-op when no ScriptScene is installed.
         {
+            extern "C" float g_wavsen_audio_bins[16];
+
+            // Calculate a single average energy level for particle response.
+            float avg_energy = 0.0f;
+            for (int i = 0; i < 16; ++i) {
+                avg_energy += g_wavsen_audio_bins[i];
+            }
+            m_scene->particleSys->audio_level = avg_energy / 16.0f;
+
             owe::script::FrameInputs fi;
             fi.frametime = static_cast<float>(m_scene->frameTime * m_speed);
             fi.runtime   = static_cast<float>(m_scene->elapsingTime);
@@ -224,6 +233,7 @@ void RenderHandler::on(RenderDraw&&) {
             fi.canvas_h  = static_cast<float>(m_scene->ortho[1]);
             fi.screen_w  = fi.canvas_w;
             fi.screen_h  = fi.canvas_h;
+            std::copy(std::begin(g_wavsen_audio_bins), std::end(g_wavsen_audio_bins), std::begin(fi.audio_average));
             owe::script::TickSceneScripts(*m_scene, fi);
         }
         // Update particle control points that are linked to the mouse.
