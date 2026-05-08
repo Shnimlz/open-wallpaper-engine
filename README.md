@@ -23,23 +23,23 @@ Made this for fun.
 - [x] Camera
 	- [x] Zoom
 	- [x] Shake
-	- [ ] Fade / Path
+	- [x] Fade / Path
 - [x] Audio
 	- [x] Loop
-	- [ ] Random
+	- [x] Random
 	- [ ] Visualization
 - [x] Particle System
 	- [x] Renderers
 	- [x] Emitters
-		- [ ] Duration 
+		- [x] Duration 
 	- [x] Initializers
 	- [x] Operators
 	- [x] Control Points
         - [x] Mouse Follow
 	- [x] Children
-    - [ ] Audio Response
+    - [x] Audio Response
 - [x] Puppet warp
 - [ ] 3D model
 - [ ] Timeline animations
 - [x] Scenescript  
-- [ ] User Properties
+- [x] User Properties

@@ -63,3 +63,43 @@ void SceneCamera::AttachNode(std::shared_ptr<SceneNode> node) {
     m_node = node;
     Update();
 }
+
+// ---- CameraPathAnimator ----------------------------------------------------
+
+void CameraPathAnimator::Tick(double dt, SceneNode* node, SceneCamera* cam) {
+    if (! HasKeyframes() || ! node) return;
+    m_time += dt;
+
+    // Wrap to loop
+    double totalDuration = m_keyframes.back().time;
+    if (totalDuration > 0.0 && m_time > totalDuration) {
+        m_time = std::fmod(m_time, totalDuration);
+    }
+
+    // Find surrounding keyframes
+    size_t i = 0;
+    for (; i + 1 < m_keyframes.size(); ++i) {
+        if (m_keyframes[i + 1].time >= m_time) break;
+    }
+    size_t j = std::min(i + 1, m_keyframes.size() - 1);
+
+    double seg_len = m_keyframes[j].time - m_keyframes[i].time;
+    float  t = (seg_len > 0.001)
+                 ? static_cast<float>((m_time - m_keyframes[i].time) / seg_len)
+                 : 0.0f;
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    // Smoothstep for organic feel
+    t = t * t * (3.0f - 2.0f * t);
+
+    auto lerp3 = [](const Vector3f& a, const Vector3f& b, float t) {
+        return a + (b - a) * t;
+    };
+
+    node->SetTranslate(lerp3(m_keyframes[i].position, m_keyframes[j].position, t));
+    node->SetRotation(lerp3(m_keyframes[i].angles, m_keyframes[j].angles, t));
+
+    if (cam && m_keyframes[i].fov > 0 && m_keyframes[j].fov > 0) {
+        cam->SetFov(m_keyframes[i].fov + (m_keyframes[j].fov - m_keyframes[i].fov) * t);
+    }
+}

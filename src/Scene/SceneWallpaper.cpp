@@ -243,6 +243,22 @@ void RenderHandler::on(RenderDraw&&) {
         }
         m_scene->particleSys->Emit();
 
+        // Tick camera path animation (keyframe interpolation).
+        if (m_scene->cameraPathAnimator.HasKeyframes()) {
+            auto* cam_node = m_scene->activeCamera->GetAttachedNode().get();
+            m_scene->cameraPathAnimator.Tick(
+                frame_timer.IdealTime() * m_speed,
+                cam_node,
+                m_scene->activeCamera);
+            if (cam_node) cam_node->UpdateTrans();
+            m_scene->activeCamera->Update();
+        }
+
+        // Advance camera fade.
+        if (m_scene->cameraFade.enabled && m_scene->cameraFade.elapsed < m_scene->cameraFade.duration) {
+            m_scene->cameraFade.elapsed += frame_timer.IdealTime() * m_speed;
+        }
+
         m_render->drawFrame(*m_scene);
 
         m_scene->PassFrameTime(frame_timer.IdealTime() * m_speed);

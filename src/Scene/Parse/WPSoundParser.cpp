@@ -94,8 +94,12 @@ public:
             m_dead = true;
             return;
         }
+        // Random mode: pick a random starting index; Loop mode: sequential.
+        uint32_t startIdx = (m_config.mode == PlaybackMode::Random)
+                            ? Random::get<uint32_t>(0, n - 1)
+                            : LoopIndex();
         for (uint32_t tried = 0; tried < n; ++tried) {
-            const std::string& path = m_soundPaths[LoopIndex()];
+            const std::string& path = m_soundPaths[(startIdx + tried) % n];
             auto bin = vfs.Open("/assets/" + path);
             if (! bin) continue;
             auto adapter = std::make_shared<BStreamAdapter>(std::move(bin));

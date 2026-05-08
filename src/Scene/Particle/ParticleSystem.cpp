@@ -80,7 +80,19 @@ ParticleInstance* ParticleSubSystem::QueryNewInstance() {
 void ParticleSubSystem::Emit() {
     double frameTime    = m_sys.scene.frameTime;
     double particleTime = frameTime * m_rate;
+
+    // Audio-responsive emitters: scale emission rate by audio energy.
+    // audioprocessingmode > 0 means this emitter reacts to audio.
+    if (m_audio_mode > 0) {
+        float audioScale = std::max(0.1f, m_sys.audio_level * 3.0f);
+        particleTime *= audioScale;
+    }
+
     m_time += particleTime;
+
+    // Duration check: stop emitting new particles after duration expires.
+    // Existing particles are still processed (operators + children run).
+    bool emission_allowed = (m_duration <= 0.0 || m_time <= m_duration);
 
     if (m_spawn_type == SpawnType::STATIC) {
         if (m_instances.empty()) m_instances.emplace_back(std::make_unique<ParticleInstance>());
@@ -132,7 +144,7 @@ void ParticleSubSystem::Emit() {
             inst->ParticlesVec().clear();
         }
 
-        if (! inst->IsDeath()) {
+        if (! inst->IsDeath() && emission_allowed) {
             for (auto& emittOp : m_emitters) {
                 emittOp(inst->ParticlesVec(), m_initializers, m_maxcount, particleTime);
             }

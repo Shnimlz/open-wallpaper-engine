@@ -583,6 +583,9 @@ void InitContext(ParseContext& context, fs::VFS& vfs, wpscene::WPScene& sc) {
         cam_shake.roughness = sc.general.camerashakeroughness;
         context.shader_updater->SetCameraShake(cam_shake);
     }
+
+    // Camera fade: smooth fade-in on scene load.
+    context.scene->cameraFade.enabled = sc.general.camerafade;
 }
 
 void ParseImageObj(ParseContext& context, wpscene::WPImageObject& img_obj) {
@@ -1106,6 +1109,20 @@ void ParseParticleObj(ParseContext& context, wpscene::WPParticleObject& wppartob
     LoadInitializer(*particleSub, particle_obj, override);
     LoadOperator(*particleSub, particle_obj, override);
     LoadControlPoint(*particleSub, particle_obj);
+
+    // Emitter duration: starttime > 0 limits how long particles emit (in seconds).
+    if (particle_obj.starttime > 0) {
+        particleSub->SetDuration(static_cast<double>(particle_obj.starttime));
+    }
+
+    // Audio response: if any emitter has audioprocessingmode > 0,
+    // the subsystem modulates emission rate by audio energy.
+    for (const auto& em : particle_obj.emitters) {
+        if (em.audioprocessingmode > 0) {
+            particleSub->SetAudioMode(em.audioprocessingmode);
+            break;
+        }
+    }
 
     mesh.AddMaterial(std::move(material));
     spNode->AddMesh(spMesh);

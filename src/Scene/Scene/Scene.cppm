@@ -462,6 +462,42 @@ private:
 };
 
 // ============================================================================
+// CameraPathAnimator — keyframe-based camera animation.
+// ============================================================================
+
+struct CameraPathKeyframe {
+    double               time { 0.0 };
+    Eigen::Vector3f      position { 0, 0, 0 };
+    Eigen::Vector3f      angles { 0, 0, 0 };
+    float                fov { 0.0f };   // 0 = don't change
+};
+
+class CameraPathAnimator {
+public:
+    void AddKeyframe(CameraPathKeyframe kf) { m_keyframes.push_back(kf); }
+    bool HasKeyframes() const { return m_keyframes.size() >= 2; }
+
+    // Advance time and interpolate the camera node.
+    // Implemented in SceneCamera.cpp (needs complete SceneNode).
+    void Tick(double dt, SceneNode* node, SceneCamera* cam);
+
+private:
+    std::vector<CameraPathKeyframe> m_keyframes;
+    double                          m_time { 0.0 };
+};
+
+// Camera fade: smooth alpha transition on scene load.
+struct CameraFadeState {
+    bool   enabled { false };
+    double duration { 1.5 };       // seconds to fade in
+    double elapsed { 0.0 };
+    float  alpha() const {
+        if (! enabled) return 1.0f;
+        return static_cast<float>(std::clamp(elapsed / duration, 0.0, 1.0));
+    }
+};
+
+// ============================================================================
 // SceneNode.h
 // ============================================================================
 
@@ -906,6 +942,12 @@ public:
     SpawnType Type() const;
     u32       MaxInstanceCount() const;
 
+    // Duration in seconds. Emission stops after this time. 0 = infinite.
+    void SetDuration(double d) { m_duration = d; }
+
+    // Audio processing mode from WE emitter. 0 = none, >0 = audio-responsive.
+    void SetAudioMode(u32 mode) { m_audio_mode = mode; }
+
 private:
     ParticleSystem&            m_sys;
     std::shared_ptr<SceneMesh> m_mesh;
@@ -920,6 +962,7 @@ private:
     u32                  m_maxcount;
     double               m_rate;
     double               m_time;
+    double               m_duration { 0.0 };  // 0 = infinite
 
     std::vector<std::unique_ptr<ParticleSubSystem>> m_children;
     std::vector<std::unique_ptr<ParticleInstance>>  m_instances;
@@ -927,6 +970,7 @@ private:
     u32       m_maxcount_instance { 1 };
     double    m_probability { 1.0f };
     SpawnType m_spawn_type { SpawnType::STATIC };
+    u32       m_audio_mode { 0 };
 };
 
 // ============================================================================
@@ -954,6 +998,10 @@ public:
 
     std::vector<std::unique_ptr<ParticleSubSystem>> subsystems;
     std::unique_ptr<IParticleRawGener>              gener;
+
+    // Average audio energy [0,1] for audio-responsive particle emitters.
+    // Written by the render handler each frame from FrameInputs.
+    float audio_level { 0.0f };
 };
 
 // ============================================================================
@@ -1049,6 +1097,10 @@ public:
     std::unique_ptr<ParticleSystem> particleSys;
 
     SceneCamera* activeCamera;
+
+    // Camera animation and fade state.
+    CameraPathAnimator cameraPathAnimator;
+    CameraFadeState    cameraFade;
 
     i32                  ortho[2] { 1920, 1080 };
     std::array<float, 3> clearColor { 1.0f, 1.0f, 1.0f };

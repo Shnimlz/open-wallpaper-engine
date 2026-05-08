@@ -914,4 +914,28 @@ void TickSceneScripts(owe::Scene& scene, const FrameInputs& fi) {
     ss->Tick(fi);
 }
 
+void JsRuntime::SetUserProperty(std::string_view key, const nlohmann::json& value) {
+    JSContext* ctx = m_impl->ctx;
+    if (! ctx) return;
+    JSValue global = JS_GetGlobalObject(ctx);
+    JSValue engine = JS_GetPropertyStr(ctx, global, "engine");
+    JSValue up     = JS_GetPropertyStr(ctx, engine, "userProperties");
+    if (JS_IsObject(up)) {
+        std::string k(key);
+        JS_DefinePropertyValueStr(ctx, up, k.c_str(),
+                                   JsonToJs(ctx, value),
+                                   JS_PROP_C_W_E);
+    }
+    JS_FreeValue(ctx, up);
+    JS_FreeValue(ctx, engine);
+    JS_FreeValue(ctx, global);
+}
+
+void SetSceneUserProperty(owe::Scene& scene, std::string_view key,
+                          const nlohmann::json& value) {
+    auto* ss = static_cast<ScriptScene*>(scene.script_scene.get());
+    if (! ss) return;
+    ss->runtime().SetUserProperty(key, value);
+}
+
 }  // namespace owe::script
