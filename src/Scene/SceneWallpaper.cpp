@@ -4,6 +4,8 @@ module;
 #include "Swapchain/ExSwapchain.hpp"
 #include <Eigen/Dense>
 
+extern "C" float g_wavsen_audio_bins[16];
+
 module wescene.scene_wallpaper;
 import wescene.types;
 import cppstd;
@@ -217,8 +219,6 @@ void RenderHandler::on(RenderDraw&&) {
         // what FrameBegin set up; UpdateUniforms runs inside drawFrame.
         // The runtime is a no-op when no ScriptScene is installed.
         {
-            extern "C" float g_wavsen_audio_bins[16];
-
             // Calculate a single average energy level for particle response.
             float avg_energy = 0.0f;
             for (int i = 0; i < 16; ++i) {
