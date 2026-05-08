@@ -293,7 +293,6 @@ bool VulkanRender::Impl::init(RenderInitInfo info) {
     }
 
     if (! initRes()) return false;
-    ;
 
     m_inited = true;
     return m_inited;
@@ -353,7 +352,7 @@ void VulkanRender::Impl::destroy() {
 
         // res
         for (auto& p : m_passes) {
-            p->destory(*m_device, m_rendering_resources);
+            p->destroy(*m_device, m_rendering_resources);
         }
         m_vertex_buf->destroy();
         m_dyn_buf->destroy();
@@ -626,7 +625,7 @@ void VulkanRender::Impl::setRenderTargetSize(Scene& scene, rg::RenderGraph& rg) 
         if (rt.bind.screen || ! rt.bind.enable) continue;
         auto bind_rt = scene.renderTargets.find(rt.bind.name);
         if (rt.bind.name.empty() || bind_rt == scene.renderTargets.end()) {
-            rstd_error("unknonw render target bind: {}", rt.bind.name);
+            rstd_error("unknown render target bind: {}", rt.bind.name);
             continue;
         }
         rt.width  = (i32)(rt.bind.scale * bind_rt->second.width);
@@ -663,7 +662,7 @@ void VulkanRender::Impl::UpdateCameraFillMode(owe::Scene&   scene,
         gCam.SetWidth(sw);
         gCam.SetHeight(sh);
         gPerCam.SetAspect(sAspect);
-        gPerCam.SetFov(algorism::CalculatePersperctiveFov(1000.0f, gCam.Height()));
+        gPerCam.SetFov(algorism::CalculatePerspectiveFov(1000.0f, gCam.Height()));
         break;
     case FillMode::ASPECTFIT:
         if (fboAspect < sAspect) {
@@ -675,7 +674,7 @@ void VulkanRender::Impl::UpdateCameraFillMode(owe::Scene&   scene,
             gCam.SetHeight(sh);
         }
         gPerCam.SetAspect(fboAspect);
-        gPerCam.SetFov(algorism::CalculatePersperctiveFov(1000.0f, gCam.Height()));
+        gPerCam.SetFov(algorism::CalculatePerspectiveFov(1000.0f, gCam.Height()));
         break;
     case FillMode::ASPECTCROP:
     default:
@@ -688,7 +687,7 @@ void VulkanRender::Impl::UpdateCameraFillMode(owe::Scene&   scene,
             gCam.SetHeight(sh);
         }
         gPerCam.SetAspect(fboAspect);
-        gPerCam.SetFov(algorism::CalculatePersperctiveFov(1000.0f, gCam.Height()));
+        gPerCam.SetFov(algorism::CalculatePerspectiveFov(1000.0f, gCam.Height()));
         break;
     }
     gCam.Update();
@@ -698,7 +697,7 @@ void VulkanRender::Impl::UpdateCameraFillMode(owe::Scene&   scene,
 
 void VulkanRender::Impl::clearLastRenderGraph() {
     for (auto& p : m_passes) {
-        p->destory(*m_device, m_rendering_resources);
+        p->destroy(*m_device, m_rendering_resources);
     }
     m_passes.clear();
     m_device->tex_cache().Clear();

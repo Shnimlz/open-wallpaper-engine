@@ -42,8 +42,8 @@ private:
 namespace algorism
 {
 // Was Utils/Algorism.h. Out-of-line in Utils/Algorism.cpp module impl unit.
-double CalculatePersperctiveDistance(double fov, double height) noexcept;
-double CalculatePersperctiveFov(double distence, double height) noexcept;
+double CalculatePerspectiveDistance(double fov, double height) noexcept;
+double CalculatePerspectiveFov(double distance, double height) noexcept;
 double PerlinNoise(double x, double y, double z) noexcept;
 
 constexpr u32 PowOfTwo(u32 x) {

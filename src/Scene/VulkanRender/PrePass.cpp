@@ -89,7 +89,7 @@ void PrePass::execute(const Device&, RenderingResources& rr) {
                         VK_DEPENDENCY_BY_REGION_BIT,
                         imb);
 }
-void PrePass::destory(const Device&, RenderingResources&) {
+void PrePass::destroy(const Device&, RenderingResources&) {
     setPrepared(false);
     clearReleaseTexs();
 }

@@ -23,7 +23,7 @@ public:
     virtual ~VulkanPass()                                            = default;
     virtual void prepare(Scene&, const Device&, RenderingResources&) = 0;
     virtual void execute(const Device&, RenderingResources&)         = 0;
-    virtual void destory(const Device&, RenderingResources&)         = 0;
+    virtual void destroy(const Device&, RenderingResources&)         = 0;
 
     void addReleaseTexs(std::span<const std::string_view> texs) {
         m_release_texs.clear();

@@ -162,4 +162,4 @@ void CopyPass::execute(const Device& device, RenderingResources& rr) {
         device.tex_cache().RecGenerateMipmaps(cmd, dst);
     }
 };
-void CopyPass::destory(const Device&, RenderingResources&) {}
+void CopyPass::destroy(const Device&, RenderingResources&) {}

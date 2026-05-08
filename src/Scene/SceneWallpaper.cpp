@@ -2,6 +2,7 @@ module;
 
 #include <rstd/macro.hpp>
 #include "Swapchain/ExSwapchain.hpp"
+#include <Eigen/Dense>
 
 module wescene.scene_wallpaper;
 import wescene.types;
@@ -224,6 +225,21 @@ void RenderHandler::on(RenderDraw&&) {
             fi.screen_w  = fi.canvas_w;
             fi.screen_h  = fi.canvas_h;
             owe::script::TickSceneScripts(*m_scene, fi);
+        }
+        // Update particle control points that are linked to the mouse.
+        // The mouse position is normalized [0,1]; map it to scene ortho space.
+        {
+            auto pos = m_mouse_pos.load();
+            double mx = pos[0] * m_scene->ortho[0];
+            double my = (1.0 - pos[1]) * m_scene->ortho[1]; // flip Y
+            for (auto& sub : m_scene->particleSys->subsystems) {
+                auto cps = sub->Controlpoints();
+                for (auto& cp : cps) {
+                    if (cp.link_mouse) {
+                        cp.offset = Eigen::Vector3d(mx, my, 0.0);
+                    }
+                }
+            }
         }
         m_scene->particleSys->Emit();
 

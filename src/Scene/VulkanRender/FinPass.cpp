@@ -148,7 +148,7 @@ void FinPass::execute(const Device& device, RenderingResources& rr) {
     }
 }
 
-void FinPass::destory(const Device&, RenderingResources&) {
+void FinPass::destroy(const Device&, RenderingResources&) {
     setPrepared(false);
     clearReleaseTexs();
 }

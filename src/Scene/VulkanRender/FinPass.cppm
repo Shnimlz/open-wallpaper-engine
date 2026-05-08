@@ -43,7 +43,7 @@ public:
 
     void prepare(Scene&, const Device&, RenderingResources&) override;
     void execute(const Device&, RenderingResources&) override;
-    void destory(const Device&, RenderingResources&) override;
+    void destroy(const Device&, RenderingResources&) override;
 
 private:
     Desc m_desc;

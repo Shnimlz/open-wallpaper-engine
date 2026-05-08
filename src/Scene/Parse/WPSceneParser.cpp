@@ -528,7 +528,7 @@ void ParseCamera(ParseContext& context, wpscene::WPSceneGeneral& general) {
         std::make_shared<SceneCamera>((float)context.ortho_w / (float)context.ortho_h,
                                       general.nearz,
                                       general.farz,
-                                      algorism::CalculatePersperctiveFov(1000.0f, context.ortho_h));
+                                      algorism::CalculatePerspectiveFov(1000.0f, context.ortho_h));
 
     Vector3f cperori                       = cori;
     cperori[2]                             = 1000.0f;
@@ -573,6 +573,15 @@ void InitContext(ParseContext& context, fs::VFS& vfs, wpscene::WPScene& sc) {
         cam_para.delay          = sc.general.cameraparallaxdelay;
         cam_para.mouseinfluence = sc.general.cameraparallaxmouseinfluence;
         context.shader_updater->SetCameraParallax(cam_para);
+    }
+
+    {
+        WPCameraShake cam_shake;
+        cam_shake.enable    = sc.general.camerashake;
+        cam_shake.amplitude = sc.general.camerashakeamplitude;
+        cam_shake.speed     = sc.general.camerashakespeed;
+        cam_shake.roughness = sc.general.camerashakeroughness;
+        context.shader_updater->SetCameraShake(cam_shake);
     }
 }
 
@@ -665,7 +674,7 @@ void ParseImageObj(ParseContext& context, wpscene::WPImageObject& img_obj) {
                            &material,
                            &svData,
                            &shaderInfo)) {
-            rstd_error("load imageobj '{}' material faild", wpimgobj.name);
+            rstd_error("load imageobj '{}' material failed", wpimgobj.name);
             return;
         };
         LoadConstvalue(material, wpimgobj.material, shaderInfo);
@@ -1051,7 +1060,7 @@ void ParseParticleObj(ParseContext& context, wpscene::WPParticleObject& wppartob
         rstd_error("load particleobj '{}' material exception: {}", wppartobj.name, e.what());
     }
     if (! mat_ok) {
-        rstd_error("load particleobj '{}' material faild", wppartobj.name);
+        rstd_error("load particleobj '{}' material failed", wppartobj.name);
         return;
     }
     LoadConstvalue(material, particle_obj.material, shaderInfo);

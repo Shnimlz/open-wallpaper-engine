@@ -498,7 +498,7 @@ void CustomShaderPass::execute(const Device&, RenderingResources& rr) {
     cmd.EndRenderPass();
 }
 
-void CustomShaderPass::destory(const Device&, RenderingResources& rr) {
+void CustomShaderPass::destroy(const Device&, RenderingResources& rr) {
     m_desc.update_op = {};
     {
         auto& buf = m_desc.dyn_vertex ? rr.dyn_buf : rr.vertex_buf;

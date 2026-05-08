@@ -52,6 +52,13 @@ struct WPCameraParallax {
     float mouseinfluence;
 };
 
+struct WPCameraShake {
+    bool  enable { false };
+    float amplitude { 0.0f };
+    float speed { 1.0f };
+    float roughness { 1.0f };
+};
+
 class WPShaderValueUpdater : public IShaderValueUpdater {
 public:
     WPShaderValueUpdater(Scene* scene): m_scene(scene) {}
@@ -67,12 +74,14 @@ public:
 
     void SetNodeData(void*, const WPShaderValueData&);
     void SetCameraParallax(const WPCameraParallax& value) { m_parallax = value; }
+    void SetCameraShake(const WPCameraShake& value) { m_shake = value; }
 
     void SetScreenSize(i32 w, i32 h) override { m_screen_size = { (float)w, (float)h }; }
 
 private:
     Scene*               m_scene;
     WPCameraParallax     m_parallax;
+    WPCameraShake        m_shake;
     double               m_dayTime { 0.0f };
     std::array<float, 2> m_texelSize { 1.0f / 1920.0f, 1.0f / 1080.0f };
 
@@ -84,6 +93,9 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> m_last_mouse_input_time;
 
     std::array<float, 2> m_screen_size { 1920, 1080 };
+
+    // Camera shake offset (x, y translate + z rotation), computed per-frame.
+    std::array<float, 3> m_shakeOffset { 0.0f, 0.0f, 0.0f };
 
     Map<void*, WPShaderValueData> m_nodeDataMap;
     Map<void*, WPUniformInfo>     m_nodeUniformInfoMap;

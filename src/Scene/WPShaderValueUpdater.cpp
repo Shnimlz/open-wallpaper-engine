@@ -32,6 +32,22 @@ void WPShaderValueUpdater::FrameBegin() {
     double t = m_parallax.delay > 0.0 ? new_time / m_parallax.delay : 1.0;
     m_mousePos = std::array { (float)algorism::lerp(t, m_mousePos[0], m_mousePosInput[0]),
                               (float)algorism::lerp(t, m_mousePos[1], m_mousePosInput[1]) };
+
+    // Camera shake — Perlin noise driven offset applied to the view matrix
+    if (m_shake.enable) {
+        double elapsed = m_scene->elapsingTime;
+        double st      = elapsed * m_shake.speed;
+        double rough   = m_shake.roughness;
+        // Three independent Perlin channels for x/y/rotation
+        double sx = algorism::PerlinNoise(st * rough, 0.0, 7.31);
+        double sy = algorism::PerlinNoise(0.0, st * rough, 13.37);
+        double sr = algorism::PerlinNoise(st * rough * 0.5, st * rough * 0.5, 23.71);
+        m_shakeOffset = { (float)(sx * m_shake.amplitude),
+                          (float)(sy * m_shake.amplitude),
+                          (float)(sr * m_shake.amplitude * 0.002f) };
+    } else {
+        m_shakeOffset = { 0.0f, 0.0f, 0.0f };
+    }
 }
 
 void WPShaderValueUpdater::FrameEnd() {}
@@ -137,6 +153,14 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
 
     Matrix4d viewProTrans = camera->GetViewProjectionMatrix();
 
+    // Apply camera shake offset (translation + subtle rotation)
+    if (m_shake.enable && (m_shakeOffset[0] != 0.0f || m_shakeOffset[1] != 0.0f)) {
+        Affine3d shakeTransform = Affine3d::Identity();
+        shakeTransform.pretranslate(Vector3d(m_shakeOffset[0], m_shakeOffset[1], 0.0));
+        shakeTransform.prerotate(AngleAxisd((double)m_shakeOffset[2], Vector3d::UnitZ()));
+        viewProTrans = viewProTrans * shakeTransform.matrix();
+    }
+
     if (info.has_VP) {
         updateOp(G_VP, ShaderValue::fromMatrix(viewProTrans));
     }
@@ -207,7 +231,7 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
             const Vector2f mouseCentered = Vector2f(&m_mousePos[0]) - Vector2f { 0.5f, 0.5f };
             para = Vector2f { 0.5f, 0.5f } +
                    (Scaling(1.0f, -1.0f) * mouseCentered) * m_parallax.mouseinfluence;
-        }        m_parallax.mouseinfluence;
+        }
         updateOp(G_PARALLAXPOSITION, std::array { para[0], para[1] });
     }
 

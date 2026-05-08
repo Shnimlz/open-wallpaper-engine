@@ -22,7 +22,7 @@ Made this for fun.
 	- [ ] Global bloom
 - [x] Camera
 	- [x] Zoom
-	- [ ] Shake
+	- [x] Shake
 	- [ ] Fade / Path
 - [x] Audio
 	- [x] Loop
@@ -35,7 +35,7 @@ Made this for fun.
 	- [x] Initializers
 	- [x] Operators
 	- [x] Control Points
-        - [ ] Mouse Follow
+        - [x] Mouse Follow
 	- [x] Children
     - [ ] Audio Response
 - [x] Puppet warp
