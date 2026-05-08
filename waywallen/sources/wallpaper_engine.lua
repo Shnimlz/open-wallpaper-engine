@@ -14,11 +14,21 @@ function M.auto_detect(ctx)
     -- actually exists on disk so the daemon can register them.
     local home = ctx.env("HOME") or ""
     local candidates = {}
+    -- Secondary SSD Steam library (user-specific mount)
+    if home ~= "" then
+        table.insert(candidates, home .. "/SSDAzuL/SteamLibrary/steamapps/workshop/content/431960")
+        table.insert(candidates, home .. "/SSDAzuL/SteamLibrary/steamapps/common/wallpaper_engine/projects/myprojects")
+        table.insert(candidates, home .. "/SSDAzuL/SteamLibrary/steamapps/common/wallpaper_engine/projects/defaultprojects")
+    end
+    -- Standard Steam paths
     if home ~= "" then
         table.insert(candidates, home .. "/.steam/steam/steamapps/workshop/content/431960")
+        table.insert(candidates, home .. "/.steam/steam/steamapps/common/wallpaper_engine/projects/myprojects")
+        table.insert(candidates, home .. "/.steam/steam/steamapps/common/wallpaper_engine/projects/defaultprojects")
         table.insert(candidates, home .. "/.local/share/Steam/steamapps/workshop/content/431960")
-        table.insert(candidates,
-            home .. "/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/workshop/content/431960")
+        table.insert(candidates, home .. "/.local/share/Steam/steamapps/common/wallpaper_engine/projects/myprojects")
+        table.insert(candidates, home .. "/.local/share/Steam/steamapps/common/wallpaper_engine/projects/defaultprojects")
+        table.insert(candidates, home .. "/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/workshop/content/431960")
     end
     local found, seen = {}, {}
     for _, p in ipairs(candidates) do
@@ -45,7 +55,7 @@ function M.scan(ctx)
         return entries
     end
 
-    local video_exts = {mp4 = true, webm = true, mkv = true, avi = true, mov = true}
+    local video_exts = {mp4 = true, webm = true, mkv = true, avi = true, mov = true, mvp = true}
 
     for _, workshop_dir in ipairs(workshop_dirs) do
     -- Derive WE installation assets dir from workshop path.
