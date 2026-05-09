@@ -161,9 +161,9 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
             const auto& unifrom_tex = info.texs[el.first];
 
             if (unifrom_tex.has_resolution) {
-                std::array<i32, 4> resolution_uint({ rt.width, rt.height, rt.width, rt.height });
+                std::array<float, 4> resolution_f({ (float)rt.width, (float)rt.height, 1.0f / (float)rt.width, 1.0f / (float)rt.height });
                 updateOp(WE_GLTEX_RESOLUTION_NAMES[el.first],
-                         ShaderValue(array_cast<float>(resolution_uint)));
+                         ShaderValue(resolution_f));
             }
             if (unifrom_tex.has_mipmap) {
                 updateOp(WE_GLTEX_MIPMAPINFO_NAMES[el.first], (float)rt.mipmap_level);
