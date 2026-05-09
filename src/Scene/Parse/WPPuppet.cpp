@@ -110,9 +110,8 @@ std::span<const Eigen::Affine3f> WPPuppet::genFrame(WPPuppetLayer& puppet_layer,
         affine = parent * affine;
     }
 
-    Affine3f modelTransF = Affine3f(modelTrans.cast<float>());
     for (unsigned i = 0; i < m_final_affines.size(); i++) {
-        m_final_affines[i] = modelTransF * m_final_affines[i] * bones[i].offset_trans.matrix();
+        m_final_affines[i] = m_final_affines[i] * bones[i].offset_trans.matrix();
     }
     return m_final_affines;
 }
