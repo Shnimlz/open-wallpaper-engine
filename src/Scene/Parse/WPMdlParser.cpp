@@ -1,7 +1,8 @@
 module;
 #include <rstd/macro.hpp>
 #include <cassert>
-
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 #include <cstring>
 
 
@@ -175,7 +176,13 @@ bool WPMdlParser::Parse(std::string_view path, fs::VFS& vfs, WPMdl& mdl) {
         if (has_offset_trans) {
             for (unsigned i = 0; i < bones_num; i++) {
                 for (unsigned j = 0; j < 3; j++) f.ReadFloat();  // like pos
-                for (unsigned j = 0; j < 16; j++) f.ReadFloat(); // mat
+                
+                Eigen::Matrix4f mat;
+                for (auto row : mat.colwise()) {
+                    for (auto& x : row) x = f.ReadFloat();
+                }
+                bones[i].offset_trans = Eigen::Affine3f(mat);
+                bones[i].has_explicit_offset = true;
             }
         }
 

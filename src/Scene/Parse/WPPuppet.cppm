@@ -28,6 +28,7 @@ public:
         bool noParent() const { return parent == 0xFFFFFFFFu; }
         // prepared
         Eigen::Affine3f offset_trans { Eigen::Affine3f::Identity() };
+        bool            has_explicit_offset { false };
         /*
         Eigen::Vector3f world_axis_x;
         Eigen::Vector3f world_axis_y;
