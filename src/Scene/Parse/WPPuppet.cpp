@@ -61,12 +61,13 @@ std::span<const Eigen::Affine3f> WPPuppet::genFrame(WPPuppetLayer& puppet_layer,
         const Affine3f parent =
             bone.noParent() ? Affine3f::Identity() : m_final_affines[bone.parent];
 
-        Vector3f    trans { bone.transform.translation() * global_blend };
-        Vector3f    scale { Vector3f::Ones() * global_blend };
-        Quaterniond quat { Quaterniond::Identity() };
+        Vector3f    trans { bone.transform.translation() * (1.0 - total_blend) };
+        Vector3f    scale { Vector3f::Ones() * (1.0 - total_blend) };
+        Quaterniond quat { Quaterniond(bone.transform.rotation().cast<double>()) };
+        if (total_blend > 0.0) {
+            quat = quat.slerp(total_blend, Quaterniond::Identity());
+        }
         Quaterniond ident { Quaterniond::Identity() };
-
-        // double cur_blend { 0.0f };
 
         for (auto& layer : puppet_layer.m_layers) {
             auto& alayer = layer.anim_layer;
@@ -80,28 +81,19 @@ std::span<const Eigen::Affine3f> WPPuppet::genFrame(WPPuppetLayer& puppet_layer,
             auto&  frame_b = layer.anim->bframes_array[i].frames[(usize)info.frame_b];
 
             double t = info.t;
-            double one_t   = 1.0f - info.t;
+            double one_t   = 1.0 - info.t;
 
-            // break up the delta quaternions from the animation start quaternion
-            // blend the starting quaternion using the reduced blending factor
-            // blend the delta using the full blending factor
             auto frame_a_quat_delta = frame_a.quaternion * frame_base.quaternion.conjugate();
             auto frame_b_quat_delta = frame_b.quaternion * frame_base.quaternion.conjugate();
             quat *= frame_a_quat_delta.slerp(info.t, frame_b_quat_delta).slerp(1.0 - layer.anim_layer.blend, ident) 
-                * frame_base.quaternion.slerp(1.0 - (layer.blend), ident);
+                * frame_base.quaternion.slerp(1.0 - layer.blend, ident);
                        
-            // break up the delta positions from the animation start position
-            // blend the starting position using the reduced blending factor
-            // blend the delta using the full blending factor
             auto frame_a_pos_delta = frame_a.position - frame_base.position;
             auto frame_b_pos_delta = frame_b.position - frame_base.position;
             trans += (layer.blend * frame_base.position) + (layer.anim_layer.blend * (frame_a_pos_delta * one_t + frame_b_pos_delta * t));
 
-            // break up the delta scales from the animation start scale
-            // blend the starting scale using the reduced blending factor
-            // blend the delta using the full blending factor
-            auto& frame_a_scale_delta = frame_a.scale - frame_base.scale;
-            auto& frame_b_scale_delta = frame_b.scale - frame_base.scale;
+            auto frame_a_scale_delta = frame_a.scale - frame_base.scale;
+            auto frame_b_scale_delta = frame_b.scale - frame_base.scale;
             scale += (layer.blend * frame_base.scale) + (layer.anim_layer.blend * (frame_a_scale_delta * one_t + frame_b_scale_delta * info.t));
         }
         affine.pretranslate(trans);
