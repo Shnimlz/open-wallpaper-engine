@@ -1,6 +1,7 @@
 module;
 #include <rstd/macro.hpp>
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 
 
@@ -112,7 +113,35 @@ bool WPMdlParser::Parse(std::string_view path, fs::VFS& vfs, WPMdl& mdl) {
         for (auto& v : id) v = f.ReadUint16();
     }
 
-    mdl.mdls = ReadMDLVesion(f);
+    // In alt_mdl_format (MDLV0023+), there is a variable-length extra data
+    // section between the indices and the MDLS bone header (blend shapes,
+    // submesh metadata, etc.).  The parser does not know how to interpret
+    // that section, so we scan forward for the "MDLS" marker.
+    if (alt_mdl_format) {
+        bool found = false;
+        char c;
+        while (f.Read(&c, 1) == 1) {
+            if (c != 'M') continue;
+            char rest[8] {};  // "DLS" + "0004\0" = 8 bytes
+            if (f.Read(rest, 8) != 8) break;
+            if (rest[0] == 'D' && rest[1] == 'L' && rest[2] == 'S') {
+                // Parse the 4-digit version number after "MDLS"
+                char ver_str[5] { rest[3], rest[4], rest[5], rest[6], '\0' };
+                mdl.mdls = std::atoi(ver_str);
+                found = true;
+                break;
+            }
+            // Not "MDLS" — back up 8 bytes so we don't skip a potential 'M'
+            // inside what we just read.
+            f.SeekCur(-8);
+        }
+        if (! found) {
+            rstd_error("mdl MDLS marker not found in {}", str_path);
+            return false;
+        }
+    } else {
+        mdl.mdls = ReadMDLVesion(f);
+    }
 
     size_t bones_file_end = f.ReadUint32();
     (void)bones_file_end;
