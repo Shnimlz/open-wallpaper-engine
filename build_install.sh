@@ -1,0 +1,1 @@
+/home/shni/waywallen/build_install.sh
