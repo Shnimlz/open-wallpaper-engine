@@ -206,9 +206,11 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
             if (reqMVPI) updateOp(G_MVPI, ShaderValue::fromMatrix(mvpTrans.inverse()));
         }
         if (reqETVP || reqETVPI) {
-            Matrix4d mvpTrans = viewProTrans * modelTrans;
-            if (reqETVP) updateOp(G_ETVP, ShaderValue::fromMatrix(mvpTrans));
-            if (reqETVPI) updateOp(G_ETVPI, ShaderValue::fromMatrix(mvpTrans.inverse()));
+            // Using Identity prevents uninitialized memory (TV static) 
+            // without causing the puppet misalignments that MVP causes.
+            Matrix4d identity = Matrix4d::Identity();
+            if (reqETVP) updateOp(G_ETVP, ShaderValue::fromMatrix(identity));
+            if (reqETVPI) updateOp(G_ETVPI, ShaderValue::fromMatrix(identity));
         }
     }
 
