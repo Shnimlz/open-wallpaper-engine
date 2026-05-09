@@ -120,8 +120,26 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
     const auto& info = m_nodeUniformInfoMap[pNode];
 
     bool hasNodeData = exists(m_nodeDataMap, pNode);
+    Matrix4d modelTrans = pNode->ModelTrans();
+
     if (hasNodeData) {
-        auto& nodeData = m_nodeDataMap.at(pNode);
+        const auto& nodeData = m_nodeDataMap.at(pNode);
+        if (cam_name != "effect" && m_parallax.enable) {
+            Vector3f nodePos = pNode->Translate();
+            Vector2f depth(&nodeData.parallaxDepth[0]);
+            Vector2f ortho { (float)m_scene->ortho[0], (float)m_scene->ortho[1] };
+            Vector2f mouseVec =
+                Scaling(1.0f, -1.0f) * (Vector2f { 0.5f, 0.5f } - Vector2f(&m_mousePos[0]));
+            mouseVec        = mouseVec.cwiseProduct(ortho) * m_parallax.mouseinfluence;
+            Vector3f camPos = camera->GetPosition().cast<float>();
+            Vector2f paraVec =
+                (nodePos.head<2>() - camPos.head<2>() + mouseVec).cwiseProduct(depth) *
+                m_parallax.amount;
+            modelTrans =
+                Affine3d(Translation3d(Vector3d(paraVec.x(), paraVec.y(), 0.0f))).matrix() *
+                modelTrans;
+        }
+
         for (const auto& el : nodeData.renderTargets) {
             if (m_scene->renderTargets.count(el.second) == 0) continue;
             const auto& rt = m_scene->renderTargets[el.second];
@@ -138,7 +156,7 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
             }
         }
         if (nodeData.puppet_layer.hasPuppet() && info.has_BONES) {
-            auto data = nodeData.puppet_layer.genFrame(m_scene->frameTime);
+            auto data = const_cast<WPShaderValueData&>(nodeData).puppet_layer.genFrame(m_scene->frameTime, modelTrans);
             updateOp(G_BONES, std::span<const float> { data[0].data(), data.size() * 16 });
         }
     }
@@ -165,27 +183,6 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
         updateOp(G_VP, ShaderValue::fromMatrix(viewProTrans));
     }
     if (reqM || reqMVP || reqMI || reqMVPI) {
-        Matrix4d modelTrans = pNode->ModelTrans();
-        if (hasNodeData && cam_name != "effect") {
-            const auto& nodeData = m_nodeDataMap.at(pNode);
-            if (m_parallax.enable) {
-                Vector3f nodePos = pNode->Translate();
-                Vector2f depth(&nodeData.parallaxDepth[0]);
-                Vector2f ortho { (float)m_scene->ortho[0], (float)m_scene->ortho[1] };
-                // flip mouse y axis
-                Vector2f mouseVec =
-                    Scaling(1.0f, -1.0f) * (Vector2f { 0.5f, 0.5f } - Vector2f(&m_mousePos[0]));
-                mouseVec        = mouseVec.cwiseProduct(ortho) * m_parallax.mouseinfluence;
-                Vector3f camPos = camera->GetPosition().cast<float>();
-                Vector2f paraVec =
-                    (nodePos.head<2>() - camPos.head<2>() + mouseVec).cwiseProduct(depth) *
-                    m_parallax.amount;
-                modelTrans =
-                    Affine3d(Translation3d(Vector3d(paraVec.x(), paraVec.y(), 0.0f))).matrix() *
-                    modelTrans;
-            }
-        }
-
         if (reqM) updateOp(G_M, ShaderValue::fromMatrix(modelTrans));
         if (reqAM) updateOp(G_AM, ShaderValue::fromMatrix(modelTrans));
         if (reqMI) updateOp(G_MI, ShaderValue::fromMatrix(modelTrans.inverse()));

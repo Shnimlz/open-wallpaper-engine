@@ -13,6 +13,7 @@ import wescene.vulkan;
 import wescene.scene;
 
 import wescene.rgraph;
+import :bloom_shaders;
 
 using namespace owe;
 namespace owe::rg
@@ -201,6 +202,100 @@ static void ToGraphPass(SceneNode* node, std::string_view output, i32 imgId, Ext
     if (imgeff != nullptr) loadEffect(imgeff);
 }
 
+static void ApplyBloom(Scene& scene, ExtraInfo& extra) {
+    auto& rgraph = *extra.rgraph;
+    int iterations = 4; // 4 iterations of Dual-Kawase blur
+    
+    int width = scene.ortho[0] / 2;
+    int height = scene.ortho[1] / 2;
+    for (int i = 0; i <= iterations; i++) {
+        std::string rt_name = "_rt_Bloom_" + std::to_string(i);
+        if (scene.renderTargets.count(rt_name) == 0) {
+            scene.renderTargets[rt_name] = {
+                .width      = (i32)width,
+                .height     = (i32)height,
+                .allowReuse = true,
+                .withDepth  = false,
+                .has_mipmap = false,
+                .mipmap_level = 1,
+            };
+        }
+        width /= 2;
+        height /= 2;
+        if (width < 1) width = 1;
+        if (height < 1) height = 1;
+    }
+
+    // 1. Threshold pass
+    auto thres_node = std::make_unique<SceneNode>();
+    auto thres_mesh = std::make_shared<SceneMesh>();
+    thres_mesh->ChangeMeshDataFrom(scene.default_effect_mesh);
+    SceneMaterial thres_mat;
+    thres_mat.name = "bloom_threshold";
+    thres_mat.customShader.shader = vulkan::GetBloomThresholdShader();
+    thres_mat.textures.push_back(SpecTex_Default.data());
+    thres_mat.customShader.constValues["g_BloomThreshold"] = scene.bloom.threshold;
+    thres_mesh->AddMaterial(std::move(thres_mat));
+    thres_node->AddMesh(thres_mesh);
+    
+    scene.extra_nodes.push_back(std::move(thres_node));
+    auto* p_thres_node = scene.extra_nodes.back().get();
+    ToGraphPass(p_thres_node, "_rt_Bloom_0", p_thres_node->ID(), extra);
+
+    // 2. Downsamples
+    for (int i = 0; i < iterations; i++) {
+        auto down_node = std::make_unique<SceneNode>();
+        auto down_mesh = std::make_shared<SceneMesh>();
+        down_mesh->ChangeMeshDataFrom(scene.default_effect_mesh);
+        SceneMaterial down_mat;
+        down_mat.name = "bloom_downsample";
+        down_mat.customShader.shader = vulkan::GetBloomDownsampleShader();
+        down_mat.textures.push_back("_rt_Bloom_" + std::to_string(i));
+        down_mesh->AddMaterial(std::move(down_mat));
+        down_node->AddMesh(down_mesh);
+        
+        scene.extra_nodes.push_back(std::move(down_node));
+        auto* p_down_node = scene.extra_nodes.back().get();
+        ToGraphPass(p_down_node, "_rt_Bloom_" + std::to_string(i + 1), p_down_node->ID(), extra);
+    }
+
+    // 3. Upsamples
+    for (int i = iterations - 1; i >= 0; i--) {
+        auto up_node = std::make_unique<SceneNode>();
+        auto up_mesh = std::make_shared<SceneMesh>();
+        up_mesh->ChangeMeshDataFrom(scene.default_effect_mesh);
+        SceneMaterial up_mat;
+        up_mat.name = "bloom_upsample";
+        up_mat.customShader.shader = vulkan::GetBloomUpsampleShader();
+        up_mat.textures.push_back("_rt_Bloom_" + std::to_string(i + 1));
+        up_mat.blenmode = BlendMode::Additive;
+        up_mat.customShader.constValues["g_BloomStrength"] = scene.bloom.strength;
+        up_mesh->AddMaterial(std::move(up_mat));
+        up_node->AddMesh(up_mesh);
+        
+        scene.extra_nodes.push_back(std::move(up_node));
+        auto* p_up_node = scene.extra_nodes.back().get();
+        ToGraphPass(p_up_node, "_rt_Bloom_" + std::to_string(i), p_up_node->ID(), extra);
+    }
+
+    // 4. Final Compose back to SpecTex_Default
+    auto comp_node = std::make_unique<SceneNode>();
+    auto comp_mesh = std::make_shared<SceneMesh>();
+    comp_mesh->ChangeMeshDataFrom(scene.default_effect_mesh);
+    SceneMaterial comp_mat;
+    comp_mat.name = "bloom_compose";
+    comp_mat.customShader.shader = vulkan::GetBloomUpsampleShader();
+    comp_mat.textures.push_back("_rt_Bloom_0");
+    comp_mat.blenmode = BlendMode::Additive;
+    comp_mat.customShader.constValues["g_BloomStrength"] = 1.0f;
+    comp_mesh->AddMaterial(std::move(comp_mat));
+    comp_node->AddMesh(comp_mesh);
+    
+    scene.extra_nodes.push_back(std::move(comp_node));
+    auto* p_comp_node = scene.extra_nodes.back().get();
+    ToGraphPass(p_comp_node, SpecTex_Default, p_comp_node->ID(), extra);
+}
+
 std::unique_ptr<rg::RenderGraph> owe::sceneToRenderGraph(Scene& scene) {
     std::unique_ptr<rg::RenderGraph> rgraph = std::make_unique<rg::RenderGraph>();
     ExtraInfo                        extra { .rgraph = rgraph.get(), .scene = &scene };
@@ -209,6 +304,10 @@ std::unique_ptr<rg::RenderGraph> owe::sceneToRenderGraph(Scene& scene) {
             ToGraphPass(node, SpecTex_Default, node->ID(), extra);
         },
         scene.sceneGraph.get());
+
+    if (scene.bloom.enable && scene.bloom.strength > 0.0f) {
+        ApplyBloom(scene, extra);
+    }
 
     for (auto& info : extra.link_info) {
         if (! exists(extra.id_link_map, info.link_id)) {

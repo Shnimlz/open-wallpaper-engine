@@ -553,6 +553,10 @@ void InitContext(ParseContext& context, fs::VFS& vfs, wpscene::WPScene& sc) {
     context.ortho_w  = scene.ortho[0];
     context.ortho_h  = scene.ortho[1];
 
+    scene.bloom.enable    = sc.general.bloom;
+    scene.bloom.strength  = sc.general.bloomstrength;
+    scene.bloom.threshold = sc.general.bloomthreshold;
+
     {
         auto& gb              = context.global_base_uniforms;
         gb["g_ViewUp"]        = std::array { 0.0f, 1.0f, 0.0f };

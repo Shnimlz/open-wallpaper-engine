@@ -1094,9 +1094,18 @@ public:
 
     SceneMesh default_effect_mesh;
 
+    std::vector<std::unique_ptr<SceneNode>> extra_nodes;
+
     std::unique_ptr<ParticleSystem> particleSys;
 
     SceneCamera* activeCamera;
+
+    struct BloomSettings {
+        bool enable { false };
+        float strength { 0.0f };
+        float threshold { 0.0f };
+    };
+    BloomSettings bloom;
 
     // Camera animation and fade state.
     CameraPathAnimator cameraPathAnimator;

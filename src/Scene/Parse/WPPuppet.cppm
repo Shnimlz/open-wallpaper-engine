@@ -69,7 +69,7 @@ public:
     std::vector<Bone>      bones;
     std::vector<Animation> anims;
 
-    std::span<const Eigen::Affine3f> genFrame(WPPuppetLayer&, double time) noexcept;
+    std::span<const Eigen::Affine3f> genFrame(WPPuppetLayer&, double time, const Eigen::Matrix4d& modelTrans) noexcept;
     void                             prepared();
 
 private:
@@ -104,7 +104,7 @@ public:
 
     void prepared(std::span<AnimationLayer>);
 
-    std::span<const Eigen::Affine3f> genFrame(double time) noexcept;
+    std::span<const Eigen::Affine3f> genFrame(double time, const Eigen::Matrix4d& modelTrans) noexcept;
 
     void updateInterpolation(double time) noexcept;
 

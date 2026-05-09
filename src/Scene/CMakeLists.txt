@@ -145,7 +145,8 @@ add_library(owe-render STATIC
   VulkanRender/CopyPass.cpp
   VulkanRender/CustomShaderPass.cpp
   VulkanRender/FinPass.cpp
-  VulkanRender/PrePass.cpp)
+  VulkanRender/PrePass.cpp
+  VulkanRender/BloomShaders.cpp)
 target_sources(owe-render
   PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES
          SceneWallpaper.cppm
@@ -161,7 +162,8 @@ target_sources(owe-render
          VulkanRender/CopyPass.cppm
          VulkanRender/CustomShaderPass.cppm
          VulkanRender/FinPass.cppm
-         VulkanRender/PrePass.cppm)
+         VulkanRender/PrePass.cppm
+         VulkanRender/BloomShaders.cppm)
 target_link_libraries(owe-render
   PUBLIC owe-vulkan owe-parse owe-script)
 target_include_directories(owe-render
