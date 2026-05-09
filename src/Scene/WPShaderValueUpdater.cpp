@@ -206,14 +206,9 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
             if (reqMVPI) updateOp(G_MVPI, ShaderValue::fromMatrix(mvpTrans.inverse()));
         }
         if (reqETVP || reqETVPI) {
-            /*
-            Vector3d nodePos = pNode->Translate().cast<double>();
-            nodePos.z()      = 1.0f;
-            Matrix4d etvpTrans =
-                viewProTrans * modelTrans * Affine3d(Eigen::Scaling(nodePos)).matrix();
-            if (reqETVPI) updateOp(G_ETVP, ShaderValue::fromMatrix(etvpTrans));
-            if (reqETVPI) updateOp(G_ETVPI, ShaderValue::fromMatrix(etvpTrans.inverse()));
-            */
+            Matrix4d mvpTrans = viewProTrans * modelTrans;
+            if (reqETVP) updateOp(G_ETVP, ShaderValue::fromMatrix(mvpTrans));
+            if (reqETVPI) updateOp(G_ETVPI, ShaderValue::fromMatrix(mvpTrans.inverse()));
         }
     }
 
@@ -273,24 +268,28 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
         updateOp(G_LCP, lights_color);
     }
 
-    if (info.has_AUDIO16_L) updateOp("g_AudioSpectrum16Left", std::span<const float>(g_wavsen_audio_bins, 16));
-    if (info.has_AUDIO16_R) updateOp("g_AudioSpectrum16Right", std::span<const float>(g_wavsen_audio_bins, 16));
-    if (info.has_AUDIO16_C) updateOp("g_AudioSpectrum16Center", std::span<const float>(g_wavsen_audio_bins, 16));
+    if (info.has_AUDIO16_L || info.has_AUDIO16_R || info.has_AUDIO16_C) {
+        std::array<float, 16 * 4> bins16 { 0 };
+        for (int i = 0; i < 16; i++) bins16[i * 4] = g_wavsen_audio_bins[i];
+        if (info.has_AUDIO16_L) updateOp("g_AudioSpectrum16Left", std::span<const float>(bins16.data(), 16 * 4));
+        if (info.has_AUDIO16_R) updateOp("g_AudioSpectrum16Right", std::span<const float>(bins16.data(), 16 * 4));
+        if (info.has_AUDIO16_C) updateOp("g_AudioSpectrum16Center", std::span<const float>(bins16.data(), 16 * 4));
+    }
 
     if (info.has_AUDIO32_L || info.has_AUDIO32_R || info.has_AUDIO32_C) {
-        std::array<float, 32> bins32;
-        for (int i = 0; i < 32; i++) bins32[i] = g_wavsen_audio_bins[i / 2];
-        if (info.has_AUDIO32_L) updateOp("g_AudioSpectrum32Left", std::span<const float>(bins32.data(), 32));
-        if (info.has_AUDIO32_R) updateOp("g_AudioSpectrum32Right", std::span<const float>(bins32.data(), 32));
-        if (info.has_AUDIO32_C) updateOp("g_AudioSpectrum32Center", std::span<const float>(bins32.data(), 32));
+        std::array<float, 32 * 4> bins32 { 0 };
+        for (int i = 0; i < 32; i++) bins32[i * 4] = g_wavsen_audio_bins[i / 2];
+        if (info.has_AUDIO32_L) updateOp("g_AudioSpectrum32Left", std::span<const float>(bins32.data(), 32 * 4));
+        if (info.has_AUDIO32_R) updateOp("g_AudioSpectrum32Right", std::span<const float>(bins32.data(), 32 * 4));
+        if (info.has_AUDIO32_C) updateOp("g_AudioSpectrum32Center", std::span<const float>(bins32.data(), 32 * 4));
     }
     
     if (info.has_AUDIO64_L || info.has_AUDIO64_R || info.has_AUDIO64_C) {
-        std::array<float, 64> bins64;
-        for (int i = 0; i < 64; i++) bins64[i] = g_wavsen_audio_bins[i / 4];
-        if (info.has_AUDIO64_L) updateOp("g_AudioSpectrum64Left", std::span<const float>(bins64.data(), 64));
-        if (info.has_AUDIO64_R) updateOp("g_AudioSpectrum64Right", std::span<const float>(bins64.data(), 64));
-        if (info.has_AUDIO64_C) updateOp("g_AudioSpectrum64Center", std::span<const float>(bins64.data(), 64));
+        std::array<float, 64 * 4> bins64 { 0 };
+        for (int i = 0; i < 64; i++) bins64[i * 4] = g_wavsen_audio_bins[i / 4];
+        if (info.has_AUDIO64_L) updateOp("g_AudioSpectrum64Left", std::span<const float>(bins64.data(), 64 * 4));
+        if (info.has_AUDIO64_R) updateOp("g_AudioSpectrum64Right", std::span<const float>(bins64.data(), 64 * 4));
+        if (info.has_AUDIO64_C) updateOp("g_AudioSpectrum64Center", std::span<const float>(bins64.data(), 64 * 4));
     }
 }
 
