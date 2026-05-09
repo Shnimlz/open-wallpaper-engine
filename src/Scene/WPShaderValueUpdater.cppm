@@ -32,6 +32,16 @@ struct WPUniformInfo {
     bool has_SCREEN { false };
     bool has_LP { false };
 
+    bool has_AUDIO16_L { false };
+    bool has_AUDIO16_R { false };
+    bool has_AUDIO16_C { false };
+    bool has_AUDIO32_L { false };
+    bool has_AUDIO32_R { false };
+    bool has_AUDIO32_C { false };
+    bool has_AUDIO64_L { false };
+    bool has_AUDIO64_R { false };
+    bool has_AUDIO64_C { false };
+
     struct Tex {
         bool has_resolution { false };
         bool has_mipmap { false };

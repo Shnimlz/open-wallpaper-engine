@@ -4,6 +4,10 @@ module;
 #include <Eigen/Geometry>
 #include <ctime>
 
+extern "C" {
+    extern float g_wavsen_audio_bins[16];
+}
+
 module wescene.shader_value_updater;
 import wescene.spec_texs;
 import wescene.core;
@@ -88,6 +92,16 @@ void WPShaderValueUpdater::InitUniforms(SceneNode* pNode, const ExistsUniformOp&
     info.has_TEXELSIZEHALF    = existsOp(G_TEXELSIZEHALF);
     info.has_SCREEN           = existsOp(G_SCREEN);
     info.has_LP               = existsOp(G_LP);
+
+    info.has_AUDIO16_L = existsOp("g_AudioSpectrum16Left");
+    info.has_AUDIO16_R = existsOp("g_AudioSpectrum16Right");
+    info.has_AUDIO16_C = existsOp("g_AudioSpectrum16Center");
+    info.has_AUDIO32_L = existsOp("g_AudioSpectrum32Left");
+    info.has_AUDIO32_R = existsOp("g_AudioSpectrum32Right");
+    info.has_AUDIO32_C = existsOp("g_AudioSpectrum32Center");
+    info.has_AUDIO64_L = existsOp("g_AudioSpectrum64Left");
+    info.has_AUDIO64_R = existsOp("g_AudioSpectrum64Right");
+    info.has_AUDIO64_C = existsOp("g_AudioSpectrum64Center");
 
     std::accumulate(begin(info.texs), end(info.texs), 0, [&existsOp](unsigned index, auto& value) {
         value.has_resolution = existsOp(WE_GLTEX_RESOLUTION_NAMES[index]);
@@ -257,6 +271,26 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
         }
         updateOp(G_LP, lights);
         updateOp(G_LCP, lights_color);
+    }
+
+    if (info.has_AUDIO16_L) updateOp("g_AudioSpectrum16Left", std::span<const float>(g_wavsen_audio_bins, 16));
+    if (info.has_AUDIO16_R) updateOp("g_AudioSpectrum16Right", std::span<const float>(g_wavsen_audio_bins, 16));
+    if (info.has_AUDIO16_C) updateOp("g_AudioSpectrum16Center", std::span<const float>(g_wavsen_audio_bins, 16));
+
+    if (info.has_AUDIO32_L || info.has_AUDIO32_R || info.has_AUDIO32_C) {
+        std::array<float, 32> bins32;
+        for (int i = 0; i < 32; i++) bins32[i] = g_wavsen_audio_bins[i / 2];
+        if (info.has_AUDIO32_L) updateOp("g_AudioSpectrum32Left", std::span<const float>(bins32.data(), 32));
+        if (info.has_AUDIO32_R) updateOp("g_AudioSpectrum32Right", std::span<const float>(bins32.data(), 32));
+        if (info.has_AUDIO32_C) updateOp("g_AudioSpectrum32Center", std::span<const float>(bins32.data(), 32));
+    }
+    
+    if (info.has_AUDIO64_L || info.has_AUDIO64_R || info.has_AUDIO64_C) {
+        std::array<float, 64> bins64;
+        for (int i = 0; i < 64; i++) bins64[i] = g_wavsen_audio_bins[i / 4];
+        if (info.has_AUDIO64_L) updateOp("g_AudioSpectrum64Left", std::span<const float>(bins64.data(), 64));
+        if (info.has_AUDIO64_R) updateOp("g_AudioSpectrum64Right", std::span<const float>(bins64.data(), 64));
+        if (info.has_AUDIO64_C) updateOp("g_AudioSpectrum64Center", std::span<const float>(bins64.data(), 64));
     }
 }
 
