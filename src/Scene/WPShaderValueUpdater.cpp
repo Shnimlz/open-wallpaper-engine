@@ -206,11 +206,9 @@ void WPShaderValueUpdater::UpdateUniforms(SceneNode* pNode, sprite_map_t& sprite
             if (reqMVPI) updateOp(G_MVPI, ShaderValue::fromMatrix(mvpTrans.inverse()));
         }
         if (reqETVP || reqETVPI) {
-            // TODO: g_EffectTextureProjectionMatrix requires a projection
-            // specific to the effect pass (screen-space UV mapping), not the
-            // object's MVP.  Left as no-op until the correct semantics are
-            // understood; using plain MVP here caused visual regressions
-            // (misaligned puppets / effects).
+            Matrix4d mvpTrans = viewProTrans * modelTrans;
+            if (reqETVP) updateOp(G_ETVP, ShaderValue::fromMatrix(mvpTrans));
+            if (reqETVPI) updateOp(G_ETVPI, ShaderValue::fromMatrix(mvpTrans.inverse()));
         }
     }
 
