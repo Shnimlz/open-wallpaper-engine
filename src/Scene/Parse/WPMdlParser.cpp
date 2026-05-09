@@ -184,6 +184,7 @@ bool WPMdlParser::Parse(std::string_view path, fs::VFS& vfs, WPMdl& mdl) {
                 bones[i].offset_trans = Eigen::Affine3f(mat);
                 bones[i].has_explicit_offset = true;
             }
+            rstd_info("Puppet MDL has explicit offset_trans!");
         }
 
         uint8_t has_index = f.ReadUint8();
